@@ -2,8 +2,12 @@ package namecheck
 
 import (
 	"fmt"
+	"sync"
+)
 
-	"github.com/jubobs/namecheck/twitter"
+var (
+	checkersMu sync.RWMutex
+	checkers   = make([]Checker, 0)
 )
 
 type Validator interface {
@@ -21,27 +25,13 @@ type Checker interface {
 }
 
 func Checkers() []Checker {
-	// for this exercise, let's pretend we support 20 different social networks
-	n := 20
-	s := make([]Checker, 0, n)
-	for i := 0; i < n; i++ {
-		var c twitter.Twitter
-		s = append(s, &c)
-	}
-	return s
+	checkersMu.RLock()
+	checkersMu.RUnlock()
+	return checkers
 }
 
-type ErrUnknownAvailability struct {
-	Username      string
-	SocialNetwork string
-	Cause         error
-}
-
-func (e *ErrUnknownAvailability) Error() string {
-	const msg = "couldn't check availability of %q on %s"
-	return fmt.Sprintf(msg, e.Username, e.SocialNetwork)
-}
-
-func (e *ErrUnknownAvailability) Unwrap() error {
-	return e.Cause
+func Register(c Checker) {
+	checkersMu.Lock()
+	defer checkersMu.Unlock()
+	checkers = append(checkers, c)
 }

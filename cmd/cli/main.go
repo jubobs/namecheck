@@ -9,6 +9,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/jubobs/namecheck"
+	_ "github.com/jubobs/namecheck/twitter"
 )
 
 type result struct {

@@ -5,6 +5,8 @@ import (
 	"regexp"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/jubobs/namecheck"
 )
 
 const (
@@ -15,11 +17,15 @@ const (
 )
 
 var (
-	legalRegexp = regexp.MustCompile(legalPattern)
-	client      = http.DefaultClient
+	legalRegexp                  = regexp.MustCompile(legalPattern)
+	client      namecheck.Client = http.DefaultClient
 )
 
 type Twitter struct{}
+
+func init() {
+	namecheck.Register(&Twitter{})
+}
 
 func (*Twitter) Validate(username string) bool {
 	return isLongEnough(username) &&
