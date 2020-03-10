@@ -14,7 +14,10 @@ const (
 	illegalPattern = "twitter"
 )
 
-var legalRegexp = regexp.MustCompile(legalPattern)
+var (
+	legalRegexp = regexp.MustCompile(legalPattern)
+	client      = http.DefaultClient
+)
 
 type Twitter struct{}
 
@@ -43,7 +46,11 @@ func containsNoIllegalPattern(username string) bool {
 
 func (*Twitter) Available(username string) (bool, error) {
 	address := "https://twitter.com/" + username
-	resp, err := http.Get(address)
+	req, err := http.NewRequest("GET", address, nil)
+	if err != nil {
+		return false, err
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		return false, err
 	}
