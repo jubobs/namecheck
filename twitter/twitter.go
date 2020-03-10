@@ -17,8 +17,7 @@ const (
 )
 
 var (
-	legalRegexp                  = regexp.MustCompile(legalPattern)
-	client      namecheck.Client = http.DefaultClient
+	legalRegexp = regexp.MustCompile(legalPattern)
 )
 
 type Twitter struct{}
@@ -50,15 +49,20 @@ func containsNoIllegalPattern(username string) bool {
 	return !strings.Contains(strings.ToLower(username), illegalPattern)
 }
 
-func (*Twitter) Available(username string) (bool, error) {
+func (t *Twitter) Available(username string) (bool, error) {
 	address := "https://twitter.com/" + username
 	req, err := http.NewRequest("GET", address, nil)
 	if err != nil {
-		return false, err
+		panic(err) // request could not be built: programming error!
 	}
-	resp, err := client.Do(req)
+	resp, err := namecheck.Client.Do(req)
 	if err != nil {
-		return false, err
+		err1 := namecheck.ErrUnknownAvailability{
+			Username:      username,
+			SocialNetwork: t.String(),
+			Cause:         err,
+		}
+		return false, &err1
 	}
 	defer resp.Body.Close()
 	return resp.StatusCode == http.StatusNotFound, nil

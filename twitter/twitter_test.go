@@ -1,12 +1,19 @@
 package twitter_test
 
 import (
+	"errors"
+	"net/http"
 	"testing"
 
+	"github.com/jubobs/namecheck"
+	"github.com/jubobs/namecheck/mock"
 	"github.com/jubobs/namecheck/twitter"
 )
 
-var checker twitter.Twitter
+var (
+	checker    twitter.Twitter
+	dummyError = errors.New("Oh no!")
+)
 
 func TestIsLongEnoughFailsOnNamesShorterThan1Chars(t *testing.T) {
 	username := ""
@@ -41,5 +48,47 @@ func TestIsShortEnoughSucceedsOnNamesShorterThan16Chars(t *testing.T) {
 	got := checker.Validate(username)
 	if got != want {
 		t.Errorf("t.IsLongEnough(%s) = %t; want %t", username, got, want)
+	}
+}
+
+func TestCheck(t *testing.T) {
+	username := "dummy"
+	cases := []struct {
+		label  string
+		client namecheck.HTTPClient
+		want   bool
+		err    error
+	}{
+		{
+			label:  "notfound",
+			client: mock.ClientWithStatusCode(http.StatusNotFound),
+			want:   true,
+			err:    nil,
+		}, {
+			label:  "ok",
+			client: mock.ClientWithStatusCode(http.StatusOK),
+			want:   false,
+			err:    nil,
+		}, {
+			label:  "lowlevelerror",
+			client: mock.ClientWithError(dummyError),
+			want:   false,
+			err: &namecheck.ErrUnknownAvailability{
+				Username:      username,
+				SocialNetwork: checker.String(),
+				Cause:         dummyError,
+			},
+		},
+	}
+
+	const template = "Check(%q), got %t, want %t"
+	for _, c := range cases {
+		t.Run(c.label, func(t *testing.T) {
+			namecheck.Client = c.client // overwrite the client for this test case
+			actual, err := checker.Available(username)
+			if actual != c.want || (err == nil) != (c.err == nil) {
+				t.Errorf(template, username, actual, c.want)
+			}
+		})
 	}
 }
