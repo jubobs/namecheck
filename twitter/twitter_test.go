@@ -1,4 +1,4 @@
-package twitter_test
+package twitter
 
 import (
 	"errors"
@@ -7,11 +7,10 @@ import (
 
 	"github.com/jubobs/namecheck"
 	"github.com/jubobs/namecheck/mock"
-	"github.com/jubobs/namecheck/twitter"
 )
 
 var (
-	checker    twitter.Twitter
+	checker    Twitter
 	dummyError = errors.New("Oh no!")
 )
 
