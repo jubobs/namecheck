@@ -9,7 +9,7 @@ import (
 func TestIsLongEnoughFailsOnNamesShorterThan1Chars(t *testing.T) {
 	username := ""
 	want := false
-	got := twitter.IsLongEnough(username)
+	got := twitter.Validate(username)
 	if got != want {
 		t.Errorf("twitter.IsLongEnough(%s) = %t; want %t", username, got, want)
 	}
@@ -18,7 +18,7 @@ func TestIsLongEnoughFailsOnNamesShorterThan1Chars(t *testing.T) {
 func TestIsLongEnoughSucceedsOnNamesLongerThan0Chars(t *testing.T) {
 	username := "a"
 	want := true
-	got := twitter.IsLongEnough(username)
+	got := twitter.Validate(username)
 	if got != want {
 		t.Errorf("twitter.IsLongEnough(%s) = %t; want %t", username, got, want)
 	}
@@ -27,7 +27,7 @@ func TestIsLongEnoughSucceedsOnNamesLongerThan0Chars(t *testing.T) {
 func TestIsShortEnoughFailsOnNamesLongerThan15Chars(t *testing.T) {
 	username := "obviously_longer_than_15"
 	want := false
-	got := twitter.IsShortEnough(username)
+	got := twitter.Validate(username)
 	if got != want {
 		t.Errorf("twitter.IsLongEnough(%s) = %t; want %t", username, got, want)
 	}
@@ -36,7 +36,7 @@ func TestIsShortEnoughFailsOnNamesLongerThan15Chars(t *testing.T) {
 func TestIsShortEnoughSucceedsOnNamesShorterThan16Chars(t *testing.T) {
 	username := "fifteen_exactly"
 	want := true
-	got := twitter.IsShortEnough(username)
+	got := twitter.Validate(username)
 	if got != want {
 		t.Errorf("twitter.IsLongEnough(%s) = %t; want %t", username, got, want)
 	}
