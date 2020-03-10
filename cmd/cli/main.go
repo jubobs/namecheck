@@ -28,13 +28,13 @@ func run(args []string, stdout, stderr io.Writer) {
 		fmt.Fprintln(stderr, "Usage:", args[0], "<username>")
 		return
 	}
-	var username = os.Args[1]
+	username := os.Args[1]
 
-	var wg sync.WaitGroup
 	checkers := namecheck.Checkers()
 	n := len(checkers)
 	results := make(chan result, n)
 
+	var wg sync.WaitGroup
 	wg.Add(n)
 	for _, checker := range checkers {
 		go func(c namecheck.Checker) {
