@@ -1,7 +1,9 @@
 package twitter
 
 import (
+	"fmt"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strings"
 	"unicode/utf8"
@@ -50,10 +52,11 @@ func containsNoIllegalPattern(username string) bool {
 }
 
 func (t *Twitter) Available(username string) (bool, error) {
-	address := "https://twitter.com/" + username
-	req, err := http.NewRequest("GET", address, nil)
+	addr := fmt.Sprintf("https://twitter.com/%s", url.PathEscape(username))
+	req, err := http.NewRequest("GET", addr, nil)
 	if err != nil {
-		panic(err) // request could not be built: programming error!
+		// request could not be constructed: programming error!
+		panic(err)
 	}
 	resp, err := namecheck.Client.Do(req)
 	if err != nil {
