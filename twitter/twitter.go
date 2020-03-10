@@ -14,13 +14,10 @@ import (
 const (
 	minLen         = 1
 	maxLen         = 15
-	legalPattern   = "^[0-9A-Z_a-z]*$"
 	illegalPattern = "twitter"
 )
 
-var (
-	legalRegexp = regexp.MustCompile(legalPattern)
-)
+var legalRegexp = regexp.MustCompile("^[0-9A-Z_a-z]*$")
 
 type Twitter struct{}
 

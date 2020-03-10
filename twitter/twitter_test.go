@@ -3,6 +3,7 @@ package twitter
 import (
 	"errors"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/jubobs/namecheck"
@@ -14,44 +15,63 @@ var (
 	dummyError = errors.New("Oh no!")
 )
 
-func TestIsLongEnoughFailsOnNamesShorterThan1Chars(t *testing.T) {
+func TestValidateFailsOnNamesThatContainIllegalChars(t *testing.T) {
+	username := "hyphen-"
+	want := false
+	got := checker.Validate(username)
+	if got != want {
+		t.Errorf("t.Validate(%s) = %t; want %t", username, got, want)
+	}
+}
+
+func TestValidateFailsOnNamesThatContainIllegalPattern(t *testing.T) {
+	username := "fooTwItterbar"
+	want := false
+	got := checker.Validate(username)
+	if got != want {
+		t.Errorf("t.Validate(%s) = %t; want %t", username, got, want)
+	}
+}
+
+func TestValidateFailsOnNamesThatAreTooShort(t *testing.T) {
 	username := ""
 	want := false
 	got := checker.Validate(username)
 	if got != want {
-		t.Errorf("t.IsLongEnough(%s) = %t; want %t", username, got, want)
+		t.Errorf("t.Validate(%s) = %t; want %t", username, got, want)
 	}
 }
 
-func TestIsLongEnoughSucceedsOnNamesLongerThan0Chars(t *testing.T) {
+func TestValidateSucceedsOnNamesThatAreLongEnough(t *testing.T) {
 	username := "a"
 	want := true
 	got := checker.Validate(username)
 	if got != want {
-		t.Errorf("t.IsLongEnough(%s) = %t; want %t", username, got, want)
+		t.Errorf("t.Validate(%s) = %t; want %t", username, got, want)
 	}
 }
 
-func TestIsShortEnoughFailsOnNamesLongerThan15Chars(t *testing.T) {
-	username := "obviously_longer_than_15"
+func TestValidateFailsOnNamesThatAreTooLong(t *testing.T) {
+	username := strings.Repeat("a", maxLen+1)
 	want := false
 	got := checker.Validate(username)
 	if got != want {
-		t.Errorf("t.IsLongEnough(%s) = %t; want %t", username, got, want)
+		t.Errorf("t.Validate(%s) = %t; want %t", username, got, want)
 	}
 }
 
-func TestIsShortEnoughSucceedsOnNamesShorterThan16Chars(t *testing.T) {
-	username := "fifteen_exactly"
+func TestValidateSucceedsOnNamesThatAreShortEnough(t *testing.T) {
+	username := strings.Repeat("a", maxLen)
 	want := true
 	got := checker.Validate(username)
 	if got != want {
-		t.Errorf("t.IsLongEnough(%s) = %t; want %t", username, got, want)
+		t.Errorf("t.Validate(%s) = %t; want %t", username, got, want)
 	}
 }
 
-func TestCheck(t *testing.T) {
+func TestAvailable(t *testing.T) {
 	username := "dummy"
+	// table-driven tests for this one...
 	cases := []struct {
 		label  string
 		client namecheck.HTTPClient
@@ -80,10 +100,10 @@ func TestCheck(t *testing.T) {
 		},
 	}
 
-	const template = "Check(%q), got %t, want %t"
+	const template = "t.Available(%q), got %t, want %t"
 	for _, c := range cases {
 		t.Run(c.label, func(t *testing.T) {
-			namecheck.Client = c.client // overwrite the client for this test case
+			namecheck.Client = c.client // use mocked client!
 			actual, err := checker.Available(username)
 			if actual != c.want || (err == nil) != (c.err == nil) {
 				t.Errorf(template, username, actual, c.want)
