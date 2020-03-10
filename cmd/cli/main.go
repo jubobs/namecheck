@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"sort"
 	"sync"
@@ -18,8 +19,12 @@ type result struct {
 }
 
 func main() {
-	if len(os.Args) != 2 {
-		fmt.Println("Usage:", os.Args[0], "<username>")
+	run(os.Args, os.Stdout, os.Stderr)
+}
+
+func run(args []string, stdout, stderr io.Writer) {
+	if len(args) != 2 {
+		fmt.Fprintln(stderr, "Usage:", args[0], "<username>")
 		return
 	}
 	var username = os.Args[1]
@@ -59,13 +64,13 @@ func main() {
 		return rs[i].socnet < rs[j].socnet
 	})
 
-	prettyPrint(rs)
+	prettyPrint(rs, stdout)
 }
 
-func prettyPrint(rs []result) {
+func prettyPrint(rs []result, stdout io.Writer) {
 	const padding = 3
 	const tmpl = "%s\t%s\t%s\t\n"
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, padding, ' ', tabwriter.TabIndent)
+	w := tabwriter.NewWriter(stdout, 0, 0, padding, ' ', tabwriter.TabIndent)
 	fmt.Fprintln(w, "social_socnetork\tvalid\tavailable\t")
 	for _, r := range rs {
 		fmt.Fprintf(w, tmpl, r.socnet, validString(r), availString(r))
