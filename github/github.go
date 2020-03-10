@@ -60,7 +60,7 @@ func containsNoIllegalSuffix(username string) bool {
 	return !strings.HasSuffix(username, illegalSuffix)
 }
 
-func (t *GitHub) Available(username string) (bool, error) {
+func (g *GitHub) Available(username string) (bool, error) {
 	addr := fmt.Sprintf("https://github.com/%s", url.PathEscape(username))
 	req, err := http.NewRequest("GET", addr, nil)
 	if err != nil {
@@ -71,7 +71,7 @@ func (t *GitHub) Available(username string) (bool, error) {
 	if err != nil {
 		err1 := namecheck.ErrUnknownAvailability{
 			Username:      username,
-			SocialNetwork: t.String(),
+			SocialNetwork: g.String(),
 			Cause:         err,
 		}
 		return false, &err1

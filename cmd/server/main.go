@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/jubobs/namecheck"
+	_ "github.com/jubobs/namecheck/github"
 	_ "github.com/jubobs/namecheck/twitter"
 )
 
@@ -46,10 +47,18 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			res := result{SocialNetwork: c.String()}
 			valid := c.Validate(username)
 			res.Valid = strconv.FormatBool(valid)
-			if valid {
-				available, err := c.Available(username)
-				res.Available = availString(available, err)
+			if !valid {
+				res.Available = "false"
+				ch <- res
+				return
 			}
+			available, err := c.Available(username)
+			if err != nil {
+				res.Available = "unknown"
+				ch <- res
+				return
+			}
+			res.Available = strconv.FormatBool(available)
 			ch <- res
 		}(checker)
 	}
@@ -73,11 +82,4 @@ func writeResp(w http.ResponseWriter, username string, ch <-chan result) error {
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "    ")
 	return enc.Encode(&v)
-}
-
-func availString(available bool, err error) string {
-	if err != nil {
-		return "unknown"
-	}
-	return strconv.FormatBool(available)
 }

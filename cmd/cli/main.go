@@ -9,7 +9,14 @@ import (
 	"text/tabwriter"
 
 	"github.com/jubobs/namecheck"
+	_ "github.com/jubobs/namecheck/github"
 	_ "github.com/jubobs/namecheck/twitter"
+)
+
+const (
+	checkmark = "\u2714"
+	crossmark = "\u2717"
+	unknown   = "?"
 )
 
 type result struct {
@@ -40,12 +47,15 @@ func run(args []string, stdout, stderr io.Writer) {
 		go func(c namecheck.Checker) {
 			defer wg.Done()
 			res := result{socnet: c.String()}
-			res.valid = c.Validate(username)
-			if res.valid {
-				dispo, err := c.Available(username)
-				res.avail = err == nil && dispo
-				res.err = err
+			valid := c.Validate(username)
+			res.valid = valid
+			if !valid {
+				results <- res
+				return
 			}
+			dispo, err := c.Available(username)
+			res.avail = err == nil && dispo
+			res.err = err
 			results <- res
 		}(checker)
 	}
@@ -82,18 +92,18 @@ func prettyPrint(rs []result, stdout io.Writer) {
 func availString(r result) string {
 	switch {
 	case r.err != nil:
-		return "?"
+		return unknown
 	case r.avail:
-		return "\u2714"
+		return checkmark
 	default:
-		return "\u2717"
+		return crossmark
 	}
 }
 
 func validString(r result) string {
 	if r.valid {
-		return "\u2714"
+		return checkmark
 	} else {
-		return "\u2717"
+		return crossmark
 	}
 }
