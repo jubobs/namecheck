@@ -1,12 +1,26 @@
 package main
 
 import (
-	"fmt"
+	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 	"sync"
 
 	"github.com/jubobs/namecheck"
+	_ "github.com/jubobs/namecheck/twitter"
+)
+
+type (
+	result struct {
+		SocialNetwork string `json:"social_network"`
+		Valid         string `json:"valid"`
+		Available     string `json:"available"`
+	}
+	entity struct {
+		Username string   `json:"username"`
+		Results  []result `json:"results"`
+	}
 )
 
 func main() {
@@ -15,20 +29,28 @@ func main() {
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
-
 	username := r.URL.Query().Get("username")
-	var wg sync.WaitGroup
-
+	if len(username) == 0 {
+		http.Error(w, "missing 'username' query parameter", http.StatusBadRequest)
+		return
+	}
 	checkers := namecheck.Checkers()
 	n := len(checkers)
-	ch := make(chan bool, 0)
+	ch := make(chan result, n)
 
+	var wg sync.WaitGroup
 	wg.Add(n)
 	for _, checker := range checkers {
 		go func(c namecheck.Checker) {
 			defer wg.Done()
-			dispo, _ := c.Available(username)
-			ch <- dispo
+			res := result{SocialNetwork: c.String()}
+			valid := c.Validate(username)
+			res.Valid = strconv.FormatBool(valid)
+			if valid {
+				available, err := c.Available(username)
+				res.Available = availString(available, err)
+			}
+			ch <- res
 		}(checker)
 	}
 
@@ -37,7 +59,25 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		close(ch)
 	}()
 
-	for result := range ch {
-		fmt.Fprintf(w, "%t\n", result)
+	writeResp(w, username, ch)
+}
+
+func writeResp(w http.ResponseWriter, username string, ch <-chan result) error {
+	w.Header().Add("Content-Type", "application/json")
+	v := entity{Username: username}
+	results := make([]result, 0)
+	for res := range ch {
+		results = append(results, res)
 	}
+	v.Results = results
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "    ")
+	return enc.Encode(&v)
+}
+
+func availString(available bool, err error) string {
+	if err != nil {
+		return "unknown"
+	}
+	return strconv.FormatBool(available)
 }
