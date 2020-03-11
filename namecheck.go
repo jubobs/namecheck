@@ -26,7 +26,7 @@ type Checker interface {
 
 func Checkers() []Checker {
 	checkersMu.RLock()
-	checkersMu.RUnlock()
+	defer checkersMu.RUnlock()
 	return checkers
 }
 
