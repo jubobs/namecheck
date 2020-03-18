@@ -101,8 +101,8 @@ func availString(r result) string {
 }
 
 func validString(r result) string {
-	if r.valid {
-		return checkmark
+	if !r.valid {
+		return crossmark
 	}
-	return crossmark
+	return checkmark
 }
