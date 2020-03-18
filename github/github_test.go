@@ -11,8 +11,8 @@ import (
 )
 
 var (
-	checker    GitHub
-	dummyError = errors.New("Oh no!")
+	checker       GitHub
+	errDummyError = errors.New("dummy_error")
 )
 
 func TestValidateFailsOnNamesThatContainIllegalChars(t *testing.T) {
@@ -108,12 +108,12 @@ func TestAvailable(t *testing.T) {
 			err:    nil,
 		}, {
 			label:  "lowlevelerror",
-			client: mock.ClientWithError(dummyError),
+			client: mock.ClientWithError(errDummyError),
 			want:   false,
 			err: &namecheck.ErrUnknownAvailability{
 				Username:      username,
 				SocialNetwork: checker.String(),
-				Cause:         dummyError,
+				Cause:         errDummyError,
 			},
 		},
 	}

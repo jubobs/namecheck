@@ -11,8 +11,8 @@ import (
 )
 
 var (
-	checker    Twitter
-	dummyError = errors.New("Oh no!")
+	checker       Twitter
+	errDummyError = errors.New("dummy_error")
 )
 
 func TestValidateFailsOnNamesThatContainIllegalChars(t *testing.T) {
@@ -90,12 +90,12 @@ func TestAvailable(t *testing.T) {
 			err:    nil,
 		}, {
 			label:  "lowlevelerror",
-			client: mock.ClientWithError(dummyError),
+			client: mock.ClientWithError(errDummyError),
 			want:   false,
 			err: &namecheck.ErrUnknownAvailability{
 				Username:      username,
 				SocialNetwork: checker.String(),
-				Cause:         dummyError,
+				Cause:         errDummyError,
 			},
 		},
 	}
